@@ -1,0 +1,135 @@
+project:
+  name: medical-diagnosis-pipeline
+  version: 1.0.0
+
+paths:
+  raw_data: data/raw
+  processed_data: data/processed
+  augmented_data: data/augmented
+  models_dir: models
+  dataset: dataset.csv
+
+# ── Disease → Category mapping (Stage-1 routing targets) ─────────────────────
+disease_categories:
+  Respiratory:
+    - Bronchial Asthma
+    - Pneumonia
+    - Tuberculosis
+    - Common Cold
+    - Allergy
+
+  Infectious:
+    - Malaria
+    - Dengue
+    - Typhoid
+    - Chicken pox
+    - AIDS
+    - Impetigo
+    - Fungal infection
+    - Hepatitis A
+    - Hepatitis B
+    - Hepatitis C
+    - Hepatitis D
+    - Hepatitis E
+    - Urinary tract infection
+
+  Gastrointestinal_Hepatic:
+    - GERD
+    - Chronic cholestasis
+    - Peptic Ulcer Disease
+    - Gastroenteritis
+    - Jaundice
+    - Alcoholic hepatitis
+    - Hemorrhoids (Piles)
+
+  Metabolic_Endocrine:
+    - Diabetes
+    - Hypertension
+    - Hypothyroidism
+    - Hyperthyroidism
+    - Hypoglycemia
+    - Heart attack
+    - Varicose veins
+
+  Musculoskeletal_Neurological:
+    - Migraine
+    - Cervical spondylosis
+    - Paralysis (brain hemorrhage)
+    - Osteoarthritis
+    - Arthritis
+    - Vertigo (BPPV)
+    - Acne
+    - Psoriasis
+    - Drug Reaction
+
+# ── Training config ──────────────────────────────────────────────────────────
+training:
+  random_state: 42
+  test_size: 0.20
+  calibration_size: 0.20          # increased for more reliable Platt scaling
+  outer_cv_folds: 5
+  inner_cv_folds: 3
+
+# ── Stage-1 Router (Pruned Decision Tree) ────────────────────────────────
+stage1:
+  max_depth: 8                    # shallower for interpretability & fewer nodes
+  ccp_alpha_sweep: 40             # focused sweep for clean elbow detection
+  cv_folds: 5                     # strictly validate
+  scoring: f1_macro
+
+# ── Stage-2 Ensemble ────────────────────────────────────────────────────────
+stage2:
+  decision_tree:
+    max_depth: 10
+    min_samples_leaf: 2           # tighter leaf constraint
+    class_weight: balanced
+    random_state: 42
+  random_forest:
+    n_estimators: 500             # more trees for variance reduction
+    max_depth: 12
+    min_samples_leaf: 2
+    class_weight: balanced
+    n_jobs: -1
+    random_state: 42
+  lightgbm:
+    n_estimators: 500             # more boosting rounds with lower LR
+    learning_rate: 0.02           # slower learning for better generalization
+    min_child_samples: 3          # regularize sparse symptom trees
+    num_leaves: 31                # default leaf-wise growth control
+    reg_alpha: 0.1                # L1 regularization
+    reg_lambda: 0.5               # L2 regularization
+    class_weight: balanced
+    verbose: -1
+    random_state: 42
+  ensemble_weights: [1, 3, 5]     # LightGBM weighted highest (best gradient correction)
+
+# ── Augmentation ─────────────────────────────────────────────────────────────
+augmentation:
+  enabled: false                  # OFF by default (dataset is balanced)
+  smote:
+    k_neighbors: 5
+    sampling_strategy: auto
+  ctgan:
+    epochs: 100
+    batch_size: 500
+    enabled: false                # optional heavy dependency
+  tomek_links: true
+
+# ── Feature engineering ──────────────────────────────────────────────────────
+features:
+  add_symptom_count: true
+  add_category_counts: true
+  add_interactions: true          # Enables pairwise symptom matching
+
+# ── Evaluation targets ───────────────────────────────────────────────────────
+evaluation:
+  macro_f1_target: 0.85
+  minority_recall_target: 0.80
+  ece_target: 0.05
+  latency_p95_target_seconds: 0.6
+
+# ── PSI drift monitoring ────────────────────────────────────────────────────
+monitoring:
+  psi_threshold_warning: 0.10
+  psi_threshold_retrain: 0.20
+  n_bins: 10

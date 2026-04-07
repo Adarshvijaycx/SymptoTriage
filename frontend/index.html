@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classifier AX - Medical Diagnosis Engine</title>
+  <meta name="description" content="AI-powered medical diagnosis predictions with transparent explainability.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Chart.js for SHAP visualisations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <main class="container">
+    
+    <header class="header">
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="url(#gradient)"/>
+          <path d="M2 17L12 22L22 17" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 12L12 17L22 12" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="gradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#4F46E5" />
+              <stop offset="1" stop-color="#06B6D4" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <h1>Classifier <span>AX</span></h1>
+      </div>
+      <p class="subtitle">Hierarchical diagnostic routing with interpretable SHAP mapping.</p>
+    </header>
+
+    <div class="dashboard-grid">
+      
+      <!-- Input Panel -->
+      <section class="glass-panel input-section">
+        <h2>Patient Presentation</h2>
+        
+        <div class="search-wrap">
+          <input type="text" id="symptom-search" placeholder="Type to search symptoms... (e.g., fever)">
+          <div id="autocomplete-list" class="autocomplete-items"></div>
+        </div>
+
+
+
+        <div class="selected-symptoms-container">
+          <h3>Selected Symptoms</h3>
+          <ul id="selected-list" class="tags-list">
+             <!-- Tags injected here -->
+          </ul>
+          <div id="empty-state" class="empty-state">No symptoms selected yet. Search to begin.</div>
+        </div>
+
+        <button id="predict-btn" class="primary-btn" disabled>
+          <span class="btn-text">Analyze Case</span>
+          <div class="spinner hide"></div>
+        </button>
+      </section>
+
+      <!-- Results Panel -->
+      <section class="glass-panel results-section" id="results-panel">
+        <div class="results-placeholder" id="placeholder">
+           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+           <p>Awaiting patient data...</p>
+        </div>
+
+        <div class="results-content hide" id="results-content">
+          <div class="status-badge pulse">Diagnosis Complete</div>
+          
+          <div class="diagnosis-header">
+            <h2 id="disease-name">Disease Name</h2>
+            <p class="category" id="disease-category">Category</p>
+          </div>
+
+          <div class="confidence-tracker">
+            <div class="conf-labels">
+              <span>Model Confidence</span>
+              <span id="conf-percentage">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="conf-fill"></div>
+            </div>
+            <p class="latency-text">Inference latency: <span id="latency-val">0</span>ms</p>
+          </div>
+
+          <div class="insight-box description-box">
+            <h3>Medical Description</h3>
+            <p id="disease-desc-text">...</p>
+          </div>
+
+          <div class="insight-box severity-box">
+            <h3>Patient Severity Assessment</h3>
+            <div class="severity-score">
+              <span class="severity-label">Total Severity Score:</span>
+              <span id="total-severity-val" class="severity-val">0</span>
+            </div>
+            <div class="active-symptom-tags" id="severity-tags-container"></div>
+          </div>
+
+          <div class="explanation-box decision-path">
+            <h3>Stage 1 Router Path</h3>
+            <p id="decision-rule">IF X > 0 THEN Y</p>
+          </div>
+
+          <div class="explanation-box shap-chart-box">
+            <h3>Stage 2 Feature Impact (SHAP)</h3>
+            <div class="chart-container">
+              <canvas id="shapChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="app.js?v=3"></script>
+</body>
+</html>
