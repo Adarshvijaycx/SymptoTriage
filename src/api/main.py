@@ -106,3 +106,17 @@ def predict_endpoint(request: PredictRequest):
         return service.run_prediction(request)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Static frontend ──────────────────────────────────────────────────────────
+# Serve the SPA from the same origin as the API so no CORS setup is needed in
+# the single-deployment case. Mounted LAST so the API routes above win. Disable
+# by setting SERVE_FRONTEND=0 (e.g. when hosting the frontend separately).
+if os.environ.get("SERVE_FRONTEND", "1") != "0":
+    from fastapi.staticfiles import StaticFiles
+
+    _frontend_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend"
+    )
+    if os.path.isdir(_frontend_dir):
+        app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")

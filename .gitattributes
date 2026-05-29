@@ -1,1 +1,4 @@
-models/*.pkl filter=lfs diff=lfs merge=lfs -text
+# The three large artifacts (explainer/calibrator/stage2) are NOT stored in git
+# at all — they are fetched at runtime from object storage (see
+# models_manifest.json). The remaining small .pkl files are committed as plain
+# git blobs (each <100KB), so no Git LFS pull is required at build time.
