@@ -1,5 +1,5 @@
 /**
- * Frontend logic for Classifier AX.
+ * Frontend logic for SymptoTriage.
  * Manages API calls, state management, autocomplete DOM injection, and Chart.js SHAP visualizations.
  */
 
@@ -108,36 +108,50 @@ function removeSymptom(name) {
     validateForm();
 }
 
+// Flip a symptom between present (+1) and confirmed-absent (-1).
+function toggleSymptom(name) {
+    selectedSymptoms[name] = selectedSymptoms[name] === 1 ? -1 : 1;
+    renderTags();
+    validateForm();
+}
+
 function renderTags() {
     selectedList.innerHTML = "";
-    
+
     const keys = Object.keys(selectedSymptoms);
-    
+
     if (keys.length === 0) {
         emptyState.style.display = "block";
     } else {
         emptyState.style.display = "none";
-        
+
         keys.forEach(k => {
             const val = selectedSymptoms[k];
+            const isPresent = val === 1;
             const li = document.createElement("li");
-            li.className = `tag tag-present`;
-            
-            const stateIcon = "+";
-            
+            li.className = `tag ${isPresent ? "tag-present" : "tag-absent"}`;
+
+            const stateIcon = isPresent ? "+" : "−";
+            const toggleLabel = isPresent ? "Mark absent" : "Mark present";
+
             // Format nice text replacing underscores
             const text = k.replace(/_/g, " ");
-            
+
             li.innerHTML = `
                 ${text} <strong>(${stateIcon})</strong>
+                <button type="button" class="tag-toggle" title="${toggleLabel}">${isPresent ? "−" : "+"}</button>
                 <button type="button" class="tag-remove">&times;</button>
             `;
-            
+
+            li.querySelector(".tag-toggle").addEventListener("click", (e) => {
+                e.stopPropagation();
+                toggleSymptom(k);
+            });
             li.querySelector(".tag-remove").addEventListener("click", (e) => {
                 e.stopPropagation();
                 removeSymptom(k);
             });
-            
+
             selectedList.appendChild(li);
         });
     }

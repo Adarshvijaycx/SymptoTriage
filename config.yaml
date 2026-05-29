@@ -1,125 +1,219 @@
 project:
   name: medical-diagnosis-pipeline
-  version: 1.0.0
+  version: 2.0.0
 
+# ── Dataset selection ────────────────────────────────────────────────────────
+# format: 'binary_matrix' = wide 0/1 matrix, label in column 0 (new dataset).
+#         'legacy_names'  = disease + symptom-name columns (old dataset.csv).
+# To revert to the old dataset: set dataset: dataset.csv and format: legacy_names,
+# then restore the category map from .migration_backup/config.yaml.bak and retrain.
 paths:
   raw_data: data/raw
   processed_data: data/processed
   augmented_data: data/augmented
   models_dir: models
-  dataset: dataset.csv
+  dataset: Diseases_and_Symptoms_dataset.csv
+
+data:
+  format: binary_matrix          # binary_matrix | legacy_names
+  label_col: diseases            # label column name for binary_matrix format
 
 # ── Disease → Category mapping (Stage-1 routing targets) ─────────────────────
+# 100 diseases across 14 organ-system categories (validated: each disease once).
 disease_categories:
-  Respiratory:
-    - Bronchial Asthma
-    - Pneumonia
-    - Tuberculosis
-    - Common Cold
-    - Allergy
+  Respiratory_ENT:
+    - "acute bronchiolitis"
+    - "acute bronchitis"
+    - "acute bronchospasm"
+    - "acute sinusitis"
+    - "asthma"
+    - "chronic obstructive pulmonary disease (copd)"
+    - "common cold"
+    - "croup"
+    - "nose disorder"
+    - "obstructive sleep apnea (osa)"
+    - "pneumonia"
+    - "seasonal allergies (hay fever)"
+    - "strep throat"
 
-  Infectious:
-    - Malaria
-    - Dengue
-    - Typhoid
-    - Chicken pox
-    - AIDS
-    - Impetigo
-    - Fungal infection
-    - Hepatitis A
-    - Hepatitis B
-    - Hepatitis C
-    - Hepatitis D
-    - Hepatitis E
-    - Urinary tract infection
+  Cardiovascular:
+    - "angina"
+    - "heart attack"
+    - "heart failure"
+    - "hypertensive heart disease"
+    - "sinus bradycardia"
 
   Gastrointestinal_Hepatic:
-    - GERD
-    - Chronic cholestasis
-    - Peptic Ulcer Disease
-    - Gastroenteritis
-    - Jaundice
-    - Alcoholic hepatitis
-    - Hemorrhoids (Piles)
+    - "acute pancreatitis"
+    - "appendicitis"
+    - "cholecystitis"
+    - "chronic constipation"
+    - "diverticulitis"
+    - "esophagitis"
+    - "gallstone"
+    - "gastrointestinal hemorrhage"
+    - "hemorrhoids"
+    - "hiatal hernia"
+    - "infectious gastroenteritis"
+    - "liver disease"
+    - "noninfectious gastroenteritis"
+    - "rectal disorder"
 
-  Metabolic_Endocrine:
-    - Diabetes
-    - Hypertension
-    - Hypothyroidism
-    - Hyperthyroidism
-    - Hypoglycemia
-    - Heart attack
-    - Varicose veins
+  Musculoskeletal:
+    - "arthritis of the hip"
+    - "brachial neuritis"
+    - "bursitis"
+    - "carpal tunnel syndrome"
+    - "chronic back pain"
+    - "complex regional pain syndrome"
+    - "degenerative disc disease"
+    - "gout"
+    - "herniated disk"
+    - "spinal stenosis"
+    - "spondylosis"
+    - "sprain or strain"
 
-  Musculoskeletal_Neurological:
-    - Migraine
-    - Cervical spondylosis
-    - Paralysis (brain hemorrhage)
-    - Osteoarthritis
-    - Arthritis
-    - Vertigo (BPPV)
-    - Acne
-    - Psoriasis
-    - Drug Reaction
+  Neurological:
+    - "concussion"
+    - "multiple sclerosis"
+    - "peripheral nerve disorder"
+
+  Psychiatric_Behavioral:
+    - "anxiety"
+    - "depression"
+    - "developmental disability"
+    - "marijuana abuse"
+    - "panic disorder"
+    - "personality disorder"
+    - "schizophrenia"
+
+  Dermatological:
+    - "actinic keratosis"
+    - "contact dermatitis"
+    - "diaper rash"
+    - "drug reaction"
+    - "eczema"
+    - "fungal infection of the hair"
+    - "psoriasis"
+    - "pyogenic skin infection"
+    - "sebaceous cyst"
+    - "skin pigmentation disorder"
+    - "skin polyp"
+
+  Genitourinary_Renal:
+    - "acute kidney injury"
+    - "benign prostatic hyperplasia (bph)"
+    - "cystitis"
+    - "temporary or benign blood in urine"
+    - "urinary tract infection"
+
+  Gynecologic_Reproductive:
+    - "idiopathic excessive menstruation"
+    - "idiopathic irregular menstrual cycle"
+    - "idiopathic painful menstruation"
+    - "pelvic inflammatory disease"
+    - "vaginal cyst"
+    - "vaginitis"
+    - "vulvodynia"
+
+  Pregnancy_Related:
+    - "hyperemesis gravidarum"
+    - "problem during pregnancy"
+    - "spontaneous abortion"
+    - "threatened pregnancy"
+
+  Ophthalmic:
+    - "conjunctivitis"
+    - "conjunctivitis due to allergy"
+    - "cornea infection"
+    - "macular degeneration"
+    - "stye"
+
+  Otologic_Dental:
+    - "dental caries"
+    - "ear drum damage"
+    - "eustachian tube dysfunction (ear disorder)"
+    - "gum disease"
+    - "otitis externa (swimmer's ear)"
+    - "otitis media"
+
+  Trauma_Perioperative:
+    - "injury to the arm"
+    - "injury to the leg"
+    - "injury to the trunk"
+    - "pain after an operation"
+
+  Systemic_Metabolic:
+    - "allergy"
+    - "hypoglycemia"
+    - "sepsis"
+    - "sickle cell crisis"
 
 # ── Training config ──────────────────────────────────────────────────────────
 training:
   random_state: 42
   test_size: 0.20
-  calibration_size: 0.20          # increased for more reliable Platt scaling
+  calibration_size: 0.20
   outer_cv_folds: 5
   inner_cv_folds: 3
 
 # ── Stage-1 Router (Pruned Decision Tree) ────────────────────────────────
 stage1:
-  max_depth: 8                    # shallower for interpretability & fewer nodes
-  ccp_alpha_sweep: 40             # focused sweep for clean elbow detection
-  cv_folds: 5                     # strictly validate
+  max_depth: 12                   # deeper: 14 categories vs old 5
+  ccp_alpha_sweep: 30
+  cv_folds: 3                     # 3 folds keeps the 96k-row sweep tractable
   scoring: f1_macro
 
 # ── Stage-2 Ensemble ────────────────────────────────────────────────────────
 stage2:
   decision_tree:
-    max_depth: 10
-    min_samples_leaf: 2           # tighter leaf constraint
+    max_depth: 12
+    min_samples_leaf: 2
     class_weight: balanced
     random_state: 42
   random_forest:
-    n_estimators: 500             # more trees for variance reduction
-    max_depth: 12
+    n_estimators: 200             # trimmed from 500: 96k rows x 14 ensembles
+    max_depth: 16
     min_samples_leaf: 2
     class_weight: balanced
     n_jobs: -1
     random_state: 42
   lightgbm:
-    n_estimators: 500             # more boosting rounds with lower LR
-    learning_rate: 0.02           # slower learning for better generalization
-    min_child_samples: 3          # regularize sparse symptom trees
-    num_leaves: 31                # default leaf-wise growth control
-    reg_alpha: 0.1                # L1 regularization
-    reg_lambda: 0.5               # L2 regularization
+    n_estimators: 300
+    learning_rate: 0.05
+    min_child_samples: 5
+    num_leaves: 31
+    reg_alpha: 0.1
+    reg_lambda: 0.5
     class_weight: balanced
     verbose: -1
     random_state: 42
-  ensemble_weights: [1, 3, 5]     # LightGBM weighted highest (best gradient correction)
+  ensemble_weights: [1, 3, 5]
 
 # ── Augmentation ─────────────────────────────────────────────────────────────
 augmentation:
-  enabled: false                  # OFF by default (dataset is balanced)
+  enabled: false                  # new dataset is large & near-balanced (1.5x)
+  # The new dataset has no -1 ("confirmed absent") signal; dropout augmentation
+  # synthesizes negative evidence so the 3-state encoder/UI toggle stays meaningful.
+  negative_evidence_rate: 0.10
+  # Each tier adds one dropout-augmented copy of the training set. The 96k-row
+  # dataset uses 2 tiers (~3x data) to stay tractable; the legacy dataset.csv
+  # default (when this key is absent) is the original 4-tier [0.15,0.3,0.5,0.8].
+  dropout_tiers: [0.30, 0.60]
   smote:
     k_neighbors: 5
     sampling_strategy: auto
   ctgan:
     epochs: 100
     batch_size: 500
-    enabled: false                # optional heavy dependency
+    enabled: false
   tomek_links: true
 
 # ── Feature engineering ──────────────────────────────────────────────────────
 features:
   add_symptom_count: true
   add_category_counts: true
-  add_interactions: true          # Enables pairwise symptom matching
+  add_interactions: true          # pairs rebuilt for new column names
 
 # ── Evaluation targets ───────────────────────────────────────────────────────
 evaluation:

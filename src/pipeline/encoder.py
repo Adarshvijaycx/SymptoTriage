@@ -119,6 +119,42 @@ class ThreeStateEncoder:
         """Fit and transform in one step."""
         return self.fit(df, disease_col).transform(df, disease_col)
 
+    # ── Binary-matrix path (new Diseases_and_Symptoms dataset) ────────────────
+    # The new dataset is already a wide 0/1 matrix: each *column* is a symptom
+    # and each *cell* is its presence flag. The symptom vocabulary is therefore
+    # the column set itself — there are no free-text tokens to discover. These
+    # methods populate exactly the same attributes (all_symptoms_,
+    # symptom_to_idx_, n_features_, label_encoder_) as the legacy path, so
+    # encode_inference_input() and the 3-state (+1/-1/0) inference logic work
+    # identically regardless of which dataset the model was trained on.
+
+    def fit_binary_matrix(self, df: pd.DataFrame,
+                          disease_col: str = "disease") -> "ThreeStateEncoder":
+        """Learn the symptom vocabulary from the matrix's column names."""
+        self.symptom_cols = [c for c in df.columns if c != disease_col]
+        # Preserve column order as the canonical feature order.
+        self.all_symptoms_ = list(self.symptom_cols)
+        self.symptom_to_idx_ = {s: i for i, s in enumerate(self.all_symptoms_)}
+        self.n_features_ = len(self.all_symptoms_)
+
+        self.label_encoder_ = LabelEncoder()
+        self.label_encoder_.fit(df[disease_col].values)
+        return self
+
+    def transform_binary_matrix(self, df: pd.DataFrame,
+                                disease_col: str = "disease") -> Tuple[np.ndarray, np.ndarray]:
+        """Read the already-binary symptom columns straight into a matrix."""
+        # Reindex to the learned column order so the feature axis is stable even
+        # if the incoming frame's columns are reordered.
+        X = df[self.all_symptoms_].to_numpy(dtype=np.int8)
+        y = self.label_encoder_.transform(df[disease_col].values)
+        return X, y
+
+    def fit_transform_binary_matrix(self, df: pd.DataFrame,
+                                    disease_col: str = "disease") -> Tuple[np.ndarray, np.ndarray]:
+        """Fit vocabulary from columns and return (X, y) in one step."""
+        return self.fit_binary_matrix(df, disease_col).transform_binary_matrix(df, disease_col)
+
     def encode_inference_input(self, symptoms: dict) -> np.ndarray:
         """Encode a single patient's symptoms for inference.
 

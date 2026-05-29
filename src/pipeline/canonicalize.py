@@ -174,7 +174,7 @@ class SymptomCanonicalizer:
 
 
 def load_raw_dataset(csv_path: str) -> pd.DataFrame:
-    """Load the raw symptom-disease CSV file.
+    """Load the raw symptom-disease CSV file (LEGACY name-column format).
 
     The CSV has no header row. Column 0 is the disease label,
     columns 1-17 are symptom strings (variable length, padded with
@@ -209,3 +209,84 @@ def load_raw_dataset(csv_path: str) -> pd.DataFrame:
     df = df.replace("", np.nan)
 
     return df
+
+
+# ── New (binary-matrix) dataset support ───────────────────────────────────────
+# The Diseases_and_Symptoms dataset is already a wide 0/1 matrix: the first
+# column is the disease label and every other column is a symptom flag. There
+# are no free-text symptom tokens to normalize, so canonicalization is a no-op
+# here (the columns themselves ARE the canonical symptom vocabulary).
+
+def load_binary_matrix_dataset(csv_path: str,
+                               label_col: str = "diseases") -> pd.DataFrame:
+    """Load a wide binary symptom matrix (new dataset format).
+
+    Expects a headered CSV where ``label_col`` holds the disease name and all
+    remaining columns are 0/1 symptom indicators. The label column is renamed
+    to ``"disease"`` so it matches the downstream ``disease_col`` convention
+    used by ThreeStateEncoder / FeatureEngineer.
+
+    Parameters
+    ----------
+    csv_path : str
+        Path to the binary-matrix CSV.
+    label_col : str, default="diseases"
+        Name of the disease label column in the source file.
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe with column ``"disease"`` first, followed by integer 0/1
+        symptom columns (column names preserved as the symptom vocabulary).
+    """
+    df = pd.read_csv(csv_path)
+
+    if label_col not in df.columns:
+        raise ValueError(
+            f"label_col '{label_col}' not found in {csv_path}. "
+            f"First columns are: {list(df.columns[:5])}"
+        )
+
+    # Standardize the label column name for downstream consistency.
+    df = df.rename(columns={label_col: "disease"})
+
+    # Move the disease column to the front if it isn't already.
+    cols = ["disease"] + [c for c in df.columns if c != "disease"]
+    df = df[cols]
+
+    # Clean labels and drop unlabeled rows.
+    df = df.dropna(subset=["disease"]).reset_index(drop=True)
+    df["disease"] = df["disease"].astype(str).str.strip()
+
+    # Coerce symptom columns to a compact integer 0/1 form. Any stray NaN in a
+    # symptom cell means "not present" -> 0.
+    sym_cols = [c for c in df.columns if c != "disease"]
+    df[sym_cols] = df[sym_cols].fillna(0).astype(np.int8)
+
+    return df
+
+
+class PassThroughCanonicalizer:
+    """No-op canonicalizer for the already-clean binary-matrix dataset.
+
+    Mirrors the SymptomCanonicalizer interface (fit / transform /
+    fit_transform) so the training pipeline can treat both dataset formats
+    uniformly. Symptom columns are pre-encoded 0/1 flags, so the only thing
+    worth normalizing is stray whitespace on the disease label.
+    """
+
+    def __init__(self):
+        self.known_symptoms_: Optional[List[str]] = None
+
+    def fit(self, df: pd.DataFrame) -> "PassThroughCanonicalizer":
+        self.known_symptoms_ = [c for c in df.columns if c != "disease"]
+        return self
+
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        result = df.copy()
+        if "disease" in result.columns:
+            result["disease"] = result["disease"].astype(str).str.strip()
+        return result
+
+    def fit_transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        return self.fit(df).transform(df)

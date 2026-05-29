@@ -1,6 +1,6 @@
-# Project Summary: Classifier AX — Medical Diagnosis System
+# Project Summary: SymptoTriage — Medical Diagnosis System
 
-This document summarizes the end-to-end development of the **Classifier AX** project, an advanced medical diagnosis machine learning pipeline with a beautifully styled Glassmorphism web dashboard.
+This document summarizes the end-to-end development of the **SymptoTriage** project, an advanced medical diagnosis machine learning pipeline with a beautifully styled Glassmorphism web dashboard.
 
 ---
 

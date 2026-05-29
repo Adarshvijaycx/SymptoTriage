@@ -34,12 +34,24 @@ app = FastAPI(
 )
 
 # CORS config
+# `allow_origins=["*"]` together with `allow_credentials=True` is invalid:
+# browsers refuse to honor a wildcard origin on credentialed requests, and a
+# wildcard on an unauthenticated medical endpoint is an unsafe default. The
+# frontend uses plain fetch (no cookies/auth), so credentials are not needed.
+# Origins come from CORS_ALLOW_ORIGINS (comma-separated); default to localhost.
+_default_origins = "http://127.0.0.1:8000,http://localhost:8000,http://127.0.0.1:5500,http://localhost:5500"
+allowed_origins = [
+    o.strip()
+    for o in os.environ.get("CORS_ALLOW_ORIGINS", _default_origins).split(",")
+    if o.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=allowed_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 
@@ -66,6 +78,14 @@ def list_diseases() -> dict:
     if not service:
         raise HTTPException(status_code=503, detail="Models not loaded")
     return {"diseases": service.get_valid_diseases()}
+
+
+@app.get("/drift")
+def drift_status() -> dict:
+    """Report PSI drift over buffered inference requests vs. training data."""
+    if not service:
+        raise HTTPException(status_code=503, detail="Models not loaded")
+    return service.check_drift()
 
 
 @app.post("/predict", response_model=PredictResponse)

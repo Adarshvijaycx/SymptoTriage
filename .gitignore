@@ -1,0 +1,57 @@
+# ── Python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+*.egg
+
+# ── Virtual environments ────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+proxy-env/
+
+# ── Testing / coverage ──────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# ── Jupyter ─────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# ── Model artifacts (large & regenerable) ───────────────────────────────────
+# Serialized .pkl artifacts total ~1.1G and individual files exceed GitHub's
+# 100MB per-file limit (e.g. explainer.pkl ~590MB). Regenerate with
+# `python -m src.train`, or distribute via Git LFS / a release attachment.
+models/
+models_backup/
+models_old_41/
+
+# ── Migration / scratch backups ─────────────────────────────────────────────
+.migration_backup/
+
+# ── Logs ────────────────────────────────────────────────────────────────────
+*.log
+
+# ── Large datasets (optional) ───────────────────────────────────────────────
+# The 100-disease dataset is ~44MB. Uncomment to keep it out of git and
+# distribute it separately if you prefer a lean repo.
+# Diseases_and_Symptoms_dataset.csv
+
+# ── OS / editor ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*~
