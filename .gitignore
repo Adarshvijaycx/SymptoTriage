@@ -35,6 +35,8 @@ htmlcov/
 models/
 models_backup/
 models_old_41/
+!models/
+!models/*.pkl
 
 # ── Migration / scratch backups ─────────────────────────────────────────────
 .migration_backup/
