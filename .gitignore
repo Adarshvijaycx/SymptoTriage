@@ -28,15 +28,16 @@ htmlcov/
 .ipynb_checkpoints/
 */.ipynb_checkpoints/
 
-# ── Model artifacts (large & regenerable) ───────────────────────────────────
-# Serialized .pkl artifacts total ~1.1G and individual files exceed GitHub's
-# 100MB per-file limit (e.g. explainer.pkl ~590MB). Regenerate with
-# `python -m src.train`, or distribute via Git LFS / a release attachment.
-models/
+# ── Model artifacts ─────────────────────────────────────────────────────────
+# Small artifacts (encoder, feat_eng, stage1, cat_encoder, canonicalizer, psi)
+# are tracked and ship in the Docker image. The three LARGE artifacts exceed
+# GitHub's 100MB per-file limit and are fetched at startup from object storage
+# (see models_manifest.json + src/api/model_loader.py), so keep them OUT of git.
+models/explainer.pkl
+models/calibrator.pkl
+models/stage2.pkl
 models_backup/
 models_old_41/
-!models/
-!models/*.pkl
 
 # ── Migration / scratch backups ─────────────────────────────────────────────
 .migration_backup/

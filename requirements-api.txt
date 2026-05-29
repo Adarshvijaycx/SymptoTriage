@@ -1,0 +1,19 @@
+# Deployment/inference requirements ONLY.
+# Pinned to EXACTLY match the environment the model .pkl files were saved in
+# (Python 3.13.2). Do not downgrade numpy: the pickles use the numpy._core
+# module introduced in NumPy 2.x, so older NumPy cannot unpickle them.
+#
+# Training-only deps (ctgan, imbalanced-learn) are intentionally excluded —
+# they are only imported under src/augmentation/ and are not used by the API.
+
+numpy==2.4.6
+pandas==3.0.3
+scikit-learn==1.8.0
+lightgbm==4.6.0
+shap==0.52.0
+joblib==1.5.3
+pyyaml==6.0.3
+
+fastapi==0.136.3
+uvicorn==0.48.0
+pydantic==2.13.4

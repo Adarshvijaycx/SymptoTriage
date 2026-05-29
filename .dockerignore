@@ -1,0 +1,14 @@
+.venv
+.git
+models_backup
+.migration_backup
+notebooks
+tests
+__pycache__
+*.pyc
+
+# Large model artifacts are fetched at startup from object storage
+# (see models_manifest.json + src/api/model_loader.py), not baked into the image.
+models/explainer.pkl
+models/calibrator.pkl
+models/stage2.pkl

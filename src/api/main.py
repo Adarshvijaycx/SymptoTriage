@@ -7,16 +7,22 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.schemas import PredictRequest, PredictResponse
 from src.api.predict import ModelService
+from src.api.model_loader import ensure_models
 
 
 service = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load model artifacts on startup."""
+    """Fetch large artifacts (if needed) then load model artifacts on startup."""
     global service
     models_dir = os.environ.get("MODELS_DIR", "models")
     try:
+        # Pull any large artifacts kept out of the image from object storage.
+        # No-op when files already exist locally with valid checksums.
+        fetched = ensure_models(models_dir)
+        if fetched:
+            print(f"Fetched model artifacts: {', '.join(fetched)}")
         service = ModelService(models_dir=models_dir)
         print("ModelService online.")
     except Exception as e:

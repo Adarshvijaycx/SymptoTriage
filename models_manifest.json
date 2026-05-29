@@ -1,0 +1,23 @@
+{
+  "_comment": "Large model artifacts kept out of git. Fetched at container startup by src/api/model_loader.py. Host these files anywhere reachable over HTTPS (Appwrite Storage, S3, R2, GCS). Set the per-file URL via the env var named in 'url_env', or set MODEL_BASE_URL so each file resolves to '<MODEL_BASE_URL>/<filename>'. Small artifacts (encoder, feat_eng, stage1, etc.) ship in the image and are not listed here.",
+  "files": [
+    {
+      "filename": "explainer.pkl",
+      "sha256": "c7eaf1c1394c9e73e37d9f4bc4593ea5d2924f7d10f0f19d1ee11d37908bae69",
+      "size_bytes": 590501001,
+      "url_env": "EXPLAINER_URL"
+    },
+    {
+      "filename": "calibrator.pkl",
+      "sha256": "dbc14c0081a8109b24e254acc798a36ebb08b7622429e6b868656882995b3877",
+      "size_bytes": 298833675,
+      "url_env": "CALIBRATOR_URL"
+    },
+    {
+      "filename": "stage2.pkl",
+      "sha256": "f71a480c1f0a2a0b59713ed0210d7471bfb226bd5e036c3469d28d77106b3bbd",
+      "size_bytes": 298678763,
+      "url_env": "STAGE2_URL"
+    }
+  ]
+}

@@ -3,7 +3,24 @@
  * Manages API calls, state management, autocomplete DOM injection, and Chart.js SHAP visualizations.
  */
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = (() => {
+    // 1. Explicit override via <meta name="api-base" content="https://...">
+    const meta = document.querySelector('meta[name="api-base"]');
+    const configured = meta && meta.content.trim();
+    if (configured) return configured.replace(/\/$/, "");
+
+    // 2. Served over http(s) (i.e. deployed, not opened as a file://):
+    //    assume the API shares this origin (frontend + backend together).
+    const { protocol, hostname, origin } = window.location;
+    if (protocol === "http:" || protocol === "https:") {
+        const isLocal = hostname === "127.0.0.1" || hostname === "localhost";
+        // On localhost the API conventionally runs on :8000; elsewhere reuse origin.
+        return isLocal ? "http://127.0.0.1:8000" : origin;
+    }
+
+    // 3. Opened directly from disk (file://): fall back to local dev server.
+    return "http://127.0.0.1:8000";
+})();
 
 // State
 let validSymptoms = [];
@@ -184,7 +201,7 @@ async function processPrediction() {
         
     } catch (e) {
         console.error(e);
-        alert("Inference failed! Verify backend is running on port 8000.");
+        alert("Inference failed. Verify the backend is reachable and CORS is configured for this site.");
     } finally {
         predictBtn.classList.remove("loading");
         predictBtn.disabled = false;
