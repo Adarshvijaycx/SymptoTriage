@@ -1,0 +1,15 @@
+# Inference deps for the Appwrite python-ml-3.11 function runtime, LITE mode.
+# SHAP/numba are intentionally excluded: LITE_EXPLAINER=1 skips the SHAP
+# explainer so cold start fits the serverless readiness window. Pins mirror the
+# retrain (numpy 2.2) so the pickles deserialize identically.
+numpy==2.2.6
+scipy==1.14.1
+scikit-learn==1.5.2
+lightgbm==4.5.0
+pandas==2.2.3
+joblib==1.4.2
+pyyaml==6.0.2
+
+fastapi==0.115.6
+uvicorn==0.34.0
+pydantic==2.10.4

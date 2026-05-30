@@ -1,29 +1,29 @@
-# Match the environment the models were trained/serialized in (Python 3.13).
-# The .pkl artifacts were saved with NumPy 2.4.6 (numpy._core); using an older
-# Python/NumPy here causes "No module named 'numpy._core'" on load.
-FROM python:3.13-slim
+# Render deployment image: full SymptoTriage app (FastAPI API + served frontend
+# + SHAP). Python 3.11 to match the shap 0.46 / numpy 2.2 model artifacts.
+# Render keeps the container warm, so loading the SHAP explainer at startup is
+# fine (no serverless cold-start limit).
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# libgomp1 is the OpenMP runtime required by LightGBM at import/predict time.
-# gcc/g++ cover any source builds for wheels lacking ARM/x86 prebuilds.
+# libgomp1 is the OpenMP runtime LightGBM needs; gcc/g++ cover source builds.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    libgomp1 \
+    gcc g++ libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install inference-only deps (no ctgan / imbalanced-learn — training only).
-COPY requirements-api.txt .
-RUN pip install --no-cache-dir -r requirements-api.txt
+COPY requirements-render.txt .
+RUN pip install --no-cache-dir -r requirements-render.txt
 
+# Copy the whole project (compressed models in models/ are baked in).
 COPY . .
 
-# Appwrite injects PORT; default to 8000 for local runs.
+# Full SHAP explainer is available on a warm host.
+ENV LITE_EXPLAINER=0
+ENV SERVE_FRONTEND=1
+# Render injects $PORT; default to 8000 for local runs.
 ENV PORT=8000
 EXPOSE 8000
 
-# Run as non-root.
 RUN useradd --create-home appuser && chown -R appuser:appuser /app
 USER appuser
 

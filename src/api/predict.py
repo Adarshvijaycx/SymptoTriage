@@ -17,7 +17,9 @@ from src.pipeline import SymptomCanonicalizer, ThreeStateEncoder, FeatureEnginee
 from src.models.stage1_router import Stage1Router
 from src.models.stage2_ensemble import Stage2Ensemble
 from src.models.calibrator import ProbabilityCalibrator
-from src.models.explainer import PredictionExplainer
+# NOTE: src.models.explainer imports shap/numba (heavy). Import it lazily inside
+# _load_models only when NOT in LITE_EXPLAINER mode, so constrained runtimes can
+# avoid the shap import entirely.
 from src.monitoring.psi_monitor import PSIMonitor
 from src.api.schemas import PredictRequest, PredictResponse
 
@@ -41,9 +43,19 @@ class ModelService:
             self.cat_encoder = joblib.load(os.path.join(models_dir, "cat_encoder.pkl"))
             self.router: Stage1Router = joblib.load(os.path.join(models_dir, "stage1.pkl"))
             self.calibrator: ProbabilityCalibrator = joblib.load(os.path.join(models_dir, "calibrator.pkl"))
-            self.explainer: PredictionExplainer = joblib.load(os.path.join(models_dir, "explainer.pkl"))
             # Keep reference to the uncalibrated ensemble for fallback class extraction
             self.ensemble: Stage2Ensemble = joblib.load(os.path.join(models_dir, "stage2.pkl"))
+
+            # Explainer: when LITE_EXPLAINER=1 (resource-constrained runtimes like
+            # Appwrite Functions), skip the heavy SHAP explainer.pkl + shap/numba
+            # import and use a decision-path-only explainer. SHAP values come back
+            # empty; everything else is unchanged.
+            if os.environ.get("LITE_EXPLAINER", "0") == "1":
+                from src.models.lite_explainer import LiteExplainer
+                self.explainer = LiteExplainer(self.router, self.feat_eng.get_all_feature_names())
+            else:
+                from src.models.explainer import PredictionExplainer
+                self.explainer = joblib.load(os.path.join(models_dir, "explainer.pkl"))
 
             # Load Metadata CSVs
             root_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))

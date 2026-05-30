@@ -1,0 +1,22 @@
+# Render Blueprint for the SymptoTriage backend (full FastAPI + SHAP app).
+# Build from the Dockerfile; models download from Appwrite Storage at boot.
+# The 2GB plan fits the ~2GB peak load; Render keeps the process warm so the
+# SHAP explainer load happens once at startup, not per request.
+services:
+  - type: web
+    name: symptotriage
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: standard            # 2GB RAM / 1 CPU (needed: ~2GB peak)
+    healthCheckPath: /health
+    envVars:
+      - key: EXPLAINER_URL
+        value: https://fra.cloud.appwrite.io/v1/storage/buckets/69b19a0200397eae5acf/files/6a1a1d3e002869dae623/view?project=69b199610038ebe40740
+      - key: CALIBRATOR_URL
+        value: https://fra.cloud.appwrite.io/v1/storage/buckets/69b19a0200397eae5acf/files/6a1a1d3e002861ca1f82/view?project=69b199610038ebe40740
+      - key: STAGE2_URL
+        value: https://fra.cloud.appwrite.io/v1/storage/buckets/69b19a0200397eae5acf/files/6a1a1d3e0028689986ed/view?project=69b199610038ebe40740
+      - key: LITE_EXPLAINER
+        value: "0"
+      - key: SERVE_FRONTEND
+        value: "1"

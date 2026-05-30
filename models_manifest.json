@@ -1,22 +1,22 @@
 {
-  "_comment": "Large model artifacts kept out of git. Fetched at container startup by src/api/model_loader.py. Host these files anywhere reachable over HTTPS (Appwrite Storage, S3, R2, GCS). Set the per-file URL via the env var named in 'url_env', or set MODEL_BASE_URL so each file resolves to '<MODEL_BASE_URL>/<filename>'. Small artifacts (encoder, feat_eng, stage1, etc.) ship in the image and are not listed here.",
+  "_comment": "Large model artifacts kept out of git, fetched at startup by src/api/model_loader.py from Appwrite Storage. Checksums/sizes match the COMPRESSED (joblib compress=3) Python 3.11 / shap 0.46 artifacts. Set per-file URL via the env var in 'url_env', or MODEL_BASE_URL.",
   "files": [
     {
       "filename": "explainer.pkl",
-      "sha256": "c7eaf1c1394c9e73e37d9f4bc4593ea5d2924f7d10f0f19d1ee11d37908bae69",
-      "size_bytes": 590501001,
+      "sha256": "5702f11774119faa1a0386fdf6f64f15a80d7d8be80fb6bfa6205da992e13377",
+      "size_bytes": 146398348,
       "url_env": "EXPLAINER_URL"
     },
     {
       "filename": "calibrator.pkl",
-      "sha256": "dbc14c0081a8109b24e254acc798a36ebb08b7622429e6b868656882995b3877",
-      "size_bytes": 298833675,
+      "sha256": "f17755c6a70bdb783c95022d334dba4857ec38b377d5b879ccfa6d584d6a1ea1",
+      "size_bytes": 95876133,
       "url_env": "CALIBRATOR_URL"
     },
     {
       "filename": "stage2.pkl",
-      "sha256": "f71a480c1f0a2a0b59713ed0210d7471bfb226bd5e036c3469d28d77106b3bbd",
-      "size_bytes": 298678763,
+      "sha256": "bdf1f577aaca9ebbe270adde075ac21ee60dacc824508ec4671020d934b07465",
+      "size_bytes": 95997490,
       "url_env": "STAGE2_URL"
     }
   ]

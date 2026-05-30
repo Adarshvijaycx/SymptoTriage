@@ -1,0 +1,39 @@
+{
+  "projectId": "69b199610038ebe40740",
+  "endpoint": "https://fra.cloud.appwrite.io/v1",
+  "functions": [
+    {
+      "$id": "6a1a05b80028d5195480",
+      "name": "SymptoTriage",
+      "runtime": "python-ml-3.11",
+      "execute": ["any"],
+      "events": [],
+      "schedule": "",
+      "timeout": 900,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "main.py",
+      "commands": "pip install -r requirements-fn.txt",
+      "buildSpecification": "s-2vcpu-2gb",
+      "runtimeSpecification": "s-4vcpu-4gb",
+      "scopes": [],
+      "path": ".",
+      "ignore": [
+        ".git",
+        ".venv",
+        "models_backup",
+        "models_old313",
+        "models_py311",
+        ".migration_backup",
+        "notebooks",
+        "tests",
+        "__pycache__",
+        "*.pyc",
+        "Diseases_and_Symptoms_dataset.csv",
+        "Dockerfile",
+        "Dockerfile.train311",
+        "Dockerfile.fn311test"
+      ]
+    }
+  ]
+}
