@@ -5,34 +5,22 @@
     {
       "$id": "6a1a05b80028d5195480",
       "name": "SymptoTriage",
-      "runtime": "python-ml-3.11",
+      "runtime": "python-3.12",
       "execute": ["any"],
       "events": [],
       "schedule": "",
-      "timeout": 900,
+      "timeout": 120,
       "enabled": true,
       "logging": true,
       "entrypoint": "main.py",
-      "commands": "pip install -r requirements-fn.txt",
-      "buildSpecification": "s-2vcpu-2gb",
-      "runtimeSpecification": "s-4vcpu-4gb",
+      "commands": "pip install -r requirements.txt",
+      "buildSpecification": "s-1vcpu-512mb",
+      "runtimeSpecification": "s-1vcpu-512mb",
       "scopes": [],
-      "path": ".",
+      "path": "proxy",
       "ignore": [
-        ".git",
-        ".venv",
-        "models_backup",
-        "models_old313",
-        "models_py311",
-        ".migration_backup",
-        "notebooks",
-        "tests",
         "__pycache__",
-        "*.pyc",
-        "Diseases_and_Symptoms_dataset.csv",
-        "Dockerfile",
-        "Dockerfile.train311",
-        "Dockerfile.fn311test"
+        "*.pyc"
       ]
     }
   ]

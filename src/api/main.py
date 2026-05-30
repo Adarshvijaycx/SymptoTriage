@@ -11,11 +11,12 @@ from src.api.model_loader import ensure_models
 
 
 service = None
+_load_error = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Fetch large artifacts (if needed) then load model artifacts on startup."""
-    global service
+    global service, _load_error
     models_dir = os.environ.get("MODELS_DIR", "models")
     try:
         # Pull any large artifacts kept out of the image from object storage.
@@ -26,6 +27,8 @@ async def lifespan(app: FastAPI):
         service = ModelService(models_dir=models_dir)
         print("ModelService online.")
     except Exception as e:
+        import traceback
+        _load_error = "".join(traceback.format_exception(type(e), e, e.__traceback__))[-1500:]
         print(f"Warning: Models failed to load. {e}")
     yield
     # Cleanup on shutdown
@@ -66,7 +69,8 @@ def health() -> dict:
     """Basic health check endpoint."""
     return {
         "status": "ok",
-        "models_loaded": service is not None
+        "models_loaded": service is not None,
+        "load_error": _load_error,
     }
 
 
